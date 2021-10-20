@@ -12,7 +12,7 @@ const ctx = new(window.AudioContext || window.webkitAudioContext)();
       this.feedback.gain.value = feedback;
       this.filter = ctx.createBiquadFilter();
       this.filter.type = "lowpass"; //highpass
-      this.filter.frequency.value = 3000;
+      this.filter.frequency.value = 2000;
 
       this.input.connect(this.filter);
       this.filter.connect(this.delay);
@@ -31,21 +31,46 @@ const ctx = new(window.AudioContext || window.webkitAudioContext)();
   }
   const delay = new Delay(ctx, 0.375);
   
-  // get audio element 
-  const audioPlayer = document.getElementById("audio");
-  audioPlayer.addEventListener("play", () => { if (ctx.state !== "running") {
-      ctx.resume();
-    }
-  });
+
+  (function () {
+    'use strict';
   
+    const song = './audio/ukulele.mp3';
+      
  
-  const sourceNode = ctx.createMediaElementSource(audioPlayer);
+    const playButton = document.querySelector('#play');
+      
+    let songBuffer;
   
-  // everything together
-  sourceNode.connect(delay.input);
+    window.fetch(song)
+      .then(response => response.arrayBuffer())
+      .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
+      .then(audioBuffer => {
+        playButton.disabled = false;
+        songBuffer = audioBuffer;
+      });
+      
+      playButton.onclick = () => play(songBuffer);
+  
+    function play(audioBuffer) {
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      
+      source.start();
+
+      // everything together
+ 
+    
+  source.connect(delay.input);
   delay.output.connect(ctx.destination);
 
   const feedback = document.getElementById("feedback");
   feedback.addEventListener("input", (e) => {
     delay.updateFeedback(e.target.value);
   });
+ }
+  }());
+ 
+  
+  
+  
